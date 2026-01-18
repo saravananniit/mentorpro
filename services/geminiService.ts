@@ -67,47 +67,53 @@ export const analyzeMentorVideo = async (input: File | string): Promise<Evaluati
       }`
   });
 
+  const config: any = {
+    tools,
+  };
+
+  // Only use JSON response schema when NOT using tools (googleSearch incompatible with JSON mime type)
+  if (!tools) {
+    config.responseMimeType = "application/json";
+    config.responseSchema = {
+      type: Type.OBJECT,
+      properties: {
+        overallScore: { type: Type.INTEGER },
+        metrics: {
+          type: Type.OBJECT,
+          properties: {
+            clarity: { type: Type.INTEGER },
+            empathy: { type: Type.INTEGER },
+            accuracy: { type: Type.INTEGER },
+            pacing: { type: Type.INTEGER }
+          },
+          required: ["clarity", "empathy", "accuracy", "pacing"]
+        },
+        summary: { type: Type.STRING },
+        interactions: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              timestamp: { type: Type.STRING },
+              learnerQuestion: { type: Type.STRING },
+              mentorAnswer: { type: Type.STRING },
+              effectivenessScore: { type: Type.INTEGER },
+              analysis: { type: Type.STRING },
+              strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+              improvements: { type: Type.ARRAY, items: { type: Type.STRING } }
+            },
+            required: ["timestamp", "learnerQuestion", "mentorAnswer", "effectivenessScore", "analysis", "strengths", "improvements"]
+          }
+        }
+      },
+      required: ["overallScore", "metrics", "summary", "interactions"]
+    };
+  }
+
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: [{ parts }],
-    config: {
-      tools,
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          overallScore: { type: Type.INTEGER },
-          metrics: {
-            type: Type.OBJECT,
-            properties: {
-              clarity: { type: Type.INTEGER },
-              empathy: { type: Type.INTEGER },
-              accuracy: { type: Type.INTEGER },
-              pacing: { type: Type.INTEGER }
-            },
-            required: ["clarity", "empathy", "accuracy", "pacing"]
-          },
-          summary: { type: Type.STRING },
-          interactions: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                timestamp: { type: Type.STRING },
-                learnerQuestion: { type: Type.STRING },
-                mentorAnswer: { type: Type.STRING },
-                effectivenessScore: { type: Type.INTEGER },
-                analysis: { type: Type.STRING },
-                strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
-                improvements: { type: Type.ARRAY, items: { type: Type.STRING } }
-              },
-              required: ["timestamp", "learnerQuestion", "mentorAnswer", "effectivenessScore", "analysis", "strengths", "improvements"]
-            }
-          }
-        },
-        required: ["overallScore", "metrics", "summary", "interactions"]
-      }
-    }
+    config
   });
 
   const resultText = response.text;
@@ -118,6 +124,18 @@ export const analyzeMentorVideo = async (input: File | string): Promise<Evaluati
     const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     return { ...parsed, sources };
   } catch (e) {
+    // If using tools (googleSearch), the response might not be pure JSON
+    // Extract JSON from the response text
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]) as EvaluationResult;
+        const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+        return { ...parsed, sources };
+      } catch {
+        throw new Error("Invalid analysis format received from AI.");
+      }
+    }
     throw new Error("Invalid analysis format received from AI.");
   }
 };
