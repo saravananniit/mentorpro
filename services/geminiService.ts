@@ -12,7 +12,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 };
 
 export const analyzeMentorVideo = async (input: File | string): Promise<EvaluationResult & { sources?: any[] }> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
   let parts: any[] = [];
   let tools: any[] | undefined = undefined;
 
