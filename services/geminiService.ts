@@ -11,17 +11,44 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-export const analyzeMentorVideo = async (input: File): Promise<EvaluationResult & { sources?: any[] }> => {
+export const analyzeMentorVideo = async (input: File | string): Promise<EvaluationResult & { sources?: any[] }> => {
+  // const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
+  
   let parts: any[] = [];
+  let tools: any[] | undefined = undefined;
 
-  const base64Data = await blobToBase64(input);
-  parts.push({
-    inlineData: {
-      mimeType: input.type,
-      data: base64Data,
-    },
-  });
+  if (typeof input === 'string') {
+    try {
+      // Attempt to fetch direct video links first
+      const fetchResponse = await fetch(input);
+      if (!fetchResponse.ok) throw new Error("Could not fetch remote file");
+      const blob = await fetchResponse.blob();
+      const base64Data = await blobToBase64(blob);
+      parts.push({
+        inlineData: {
+          mimeType: blob.type || "video/mp4",
+          data: base64Data,
+        },
+      });
+    } catch (e) {
+      // Fallback to Search Grounding for platform URLs (YouTube, etc.) or CORS blocked files
+      parts.push({
+        text: `The user provided this video URL for analysis: ${input}. 
+        Use Google Search to locate the video content, transcript, or a detailed description. 
+        Then, evaluate the mentor based on any learner-mentor interactions found in that content.`
+      });
+      tools = [{ googleSearch: {} }];
+    }
+  } else {
+    const base64Data = await blobToBase64(input);
+    parts.push({
+      inlineData: {
+        mimeType: input.type,
+        data: base64Data,
+      },
+    });
+  }
 
   parts.push({
     text: `Analyze the mentoring session. Extract every specific instance where a learner asks a question and the mentor provides a response. 
@@ -46,6 +73,7 @@ export const analyzeMentorVideo = async (input: File): Promise<EvaluationResult 
     model: "gemini-2.5-flash",
     contents: [{ parts }],
     config: {
+      tools,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
