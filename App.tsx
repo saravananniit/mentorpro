@@ -29,7 +29,7 @@ const App: React.FC = () => {
 
   const handleStartAnalysis = async () => {
     if (!selectedFile && !videoUrl) {
-      setError("Please provide a video file or URL to begin evaluation.");
+      setError("Please provide a video file to begin evaluation.");
       return;
     }
 
@@ -100,7 +100,7 @@ const App: React.FC = () => {
                 Evaluate Every Interaction <br/><span className="text-indigo-600">Improve Every Mentor.</span>
               </h2>
               <p className="text-xl text-slate-500 max-w-2xl mx-auto">
-                Upload a recording or provide a URL to extract conversational loops and score pedagogical effectiveness.
+                Upload a recording  to extract conversational loops and score pedagogical effectiveness.
               </p>
             </div>
 
