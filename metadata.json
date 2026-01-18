@@ -1,0 +1,8 @@
+{
+  "name": "MentorEvaluator Pro",
+  "description": "An AI-powered dashboard that analyzes mentoring videos to evaluate mentor-learner interactions, extracting Q&A pairs and scoring pedagogical effectiveness.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
