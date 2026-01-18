@@ -127,8 +127,6 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-          
-          
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm font-bold flex gap-3 items-start">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
