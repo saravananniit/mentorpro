@@ -16,7 +16,6 @@ const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.IDLE);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<(EvaluationResult & { sources?: any[] }) | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,8 +27,8 @@ const App: React.FC = () => {
   };
 
   const handleStartAnalysis = async () => {
-    if (!selectedFile && !videoUrl) {
-      setError("Please provide a video file or URL to begin evaluation.");
+    if (!selectedFile) {
+      setError("Please provide a video file to begin evaluation.");
       return;
     }
 
@@ -37,8 +36,7 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const input = selectedFile || videoUrl;
-      const evaluation = await analyzeMentorVideo(input);
+      const evaluation = await analyzeMentorVideo(selectedFile);
       setResult(evaluation);
       setState(AppState.RESULT);
     } catch (err: any) {
@@ -51,7 +49,6 @@ const App: React.FC = () => {
     setState(AppState.IDLE);
     setResult(null);
     setSelectedFile(null);
-    setVideoUrl('');
     setError(null);
   };
 
@@ -127,31 +124,6 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="relative flex items-center gap-4">
-                  <div className="h-px flex-1 bg-slate-200"></div>
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest">or evaluate by url</span>
-                  <div className="h-px flex-1 bg-slate-200"></div>
-                </div>
-
-                <div>
-                  <input 
-                    type="url" 
-                    value={videoUrl}
-                    onChange={(e) => {
-                      setVideoUrl(e.target.value);
-                      if (e.target.value) setSelectedFile(null);
-                    }}
-                    placeholder="Paste recording URL (YouTube, Vimeo, or direct link)..."
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium"
-                  />
-                  <p className="mt-2 text-xs text-slate-400 flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    URL analysis leverages Google Search grounding for remote platforms.
-                  </p>
-                </div>
-
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm font-bold flex gap-3 items-start">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
@@ -163,7 +135,7 @@ const App: React.FC = () => {
 
                 <button 
                   onClick={handleStartAnalysis}
-                  disabled={!selectedFile && !videoUrl}
+                  disabled={!selectedFile}
                   className="w-full bg-slate-900 hover:bg-indigo-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black py-5 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-[0.98]"
                 >
                   Analyze Mentor Skills
