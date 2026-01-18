@@ -157,11 +157,11 @@ const App: React.FC = () => {
               </div>
             </div>
             <h2 className="text-3xl font-black text-slate-900 mb-4 text-center">
-              {videoUrl ? "Searching & Evaluating URL" : "AI is Watching & Evaluating"}
+              AI is Watching & Evaluating
             </h2>
             <div className="max-w-md w-full text-center space-y-2">
               <p className="text-slate-500 font-medium">
-                {videoUrl ? "Accessing video context via Search Grounding..." : "Processing video frames locally..."}
+                Processing video frames locally...
               </p>
               <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                 <div className="h-full bg-indigo-600 w-1/2 animate-[progress_2s_infinite]"></div>
